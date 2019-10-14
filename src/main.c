@@ -192,8 +192,8 @@ void moveTile(Game *game, Direction dir) {
     };
 
     /* Assign locations to vars for ease of access */
-    int* tile = game->board[locus[dir].row][locus[dir].col];
-    int* blank = game->board[game->blank.row][game->blank.col];
+    int* tile = &game->board[locus[dir].row][locus[dir].col];
+    int* blank = &game->board[game->blank.row][game->blank.col];
 
     /* Update blank location in game */
     game->blank.row = locus[dir].row;
@@ -214,6 +214,7 @@ void end(Game *game, int status) {
     exit(status);
 }
 
+void draw(Game *game); // TODO: Implement;
 
 void update(Game *game) {
 
@@ -231,12 +232,11 @@ void update(Game *game) {
 }
 
 
-int main(int argc, char *argv[]) {
+int main(/*int argc, char *argv[]*/) {
 
     Game game = init();
     while (1) {
         update(&game);
-        draw(&game); // TODO: Implement;
     }
     end(&game, 0);
     return 0;

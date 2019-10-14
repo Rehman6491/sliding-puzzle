@@ -1,7 +1,3 @@
 generate:
-        @echo "Creating empty text files..."
-        gcc main.c -std=C99 -W -Wall -Werror -Wextre -pedantic -lm -lncurses
-
-clean:
-        @echo "Cleaning up..."
-        rm *.txt
+	@echo "Building project..."
+	gcc src/main.c -std=c99 -W -Wall -Werror -Wextra -pedantic -lm -lncurses
