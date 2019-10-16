@@ -157,16 +157,45 @@ Game init() {
     refresh(); /* Prepares screen for output */
 	noecho(); /* Disables echo */
 
-    const int WIDTH  = game.size * 4 + 1;
+    const int WIDTH  = game.size * 5 + 1;
     const int HEIGHT = game.size * 2 + 1;
     const int STARTX = 1;
     const int STARTY = 2;
     game.win = newwin(HEIGHT, WIDTH, STARTX, STARTY); /* Creates curses window */
+    game.state = Unsolved;
 
     wrefresh(game.win);
 	keypad(game.win, TRUE); /* Enables keypad input for window */
 
     return game;
+}
+
+
+void end(Game *game, int status) {
+    freeBoard(game);
+	clrtoeol();
+    nocbreak();
+	refresh();
+	endwin();
+    exit(status);
+}
+
+
+GameState checkGame(Game *game) {
+    int current = 0;
+    int last = 0;
+    
+    // Check every tile to ensure they are in order, ignore zeroes
+    for (int row = 0; row < game->size; row++) {
+        for (int col = 0; col < game->size; col++) {
+            if (game->board[row][col] != 0) {
+                current = game->board[row][col];
+                if (current < last) return Unsolved;
+                last = current;
+            }
+        }
+    }
+    return Solved;
 }
 
 
@@ -212,25 +241,25 @@ void moveTile(Game *game, Direction dir) {
 }
 
 
-void end(Game *game, int status) {
-    freeBoard(game);
-	clrtoeol();
-    nocbreak();
-	refresh();
-	endwin();
-    exit(status);
-}
-
-
 void draw(Game *game) {
+
+    game->state = checkGame(game);
+
+    if (game->state == Solved) {
+
+        /* Victory screen */
+        mvwprintw(game->win, game->size, game->size * 2 + game->size / 2 - 6, "YOU SOLVED IT!");
+        mvwprintw(game->win, game->size + 1, game->size * 2 + game->size / 2 - 6, "Push Q to exit");
+        
+    }
 
     /* Print board */
     for (int x = 0; x < game->size; x++) {
         for (int y = 0; y < game->size; y++) {
-            mvwprintw(game->win, y * 2, x * 4, "+---+");
-            mvwprintw(game->win, y * 2 + 1, x * 4, "|   |");
+            mvwprintw(game->win, y * 2, x * 5, "+----+");
+            mvwprintw(game->win, y * 2 + 1, x * 5, "|    |");
         }
-        mvwprintw(game->win, game->size * 2, x * 4, "+---+");
+        mvwprintw(game->win, game->size * 2, x * 5, "+----+");
     }
 
     /* Print numbers */
@@ -239,20 +268,18 @@ void draw(Game *game) {
 
             char tileName;
             if (game->board[row][col]) {
-                tileName = (char)(game->board[row][col] + 48);
-            } else {
-                if (game->state == Warn) {
-                    tileName = '!';
-                    game->state = Unsolved;
-                } else {
-                    tileName = ' ';
-                }
-            }
 
-            mvwaddch(game->win, row * 2 + 1, col * 4 + 2, tileName);
+                tileName = game->board[row][col];
+                mvwprintw(game->win, row * 2 + 1, col * 5 + 2, "%02d", tileName);
+
+            } else {
+
+                mvwprintw(game->win, row * 2 + 1, col * 5 + 2, "  ", tileName);
+
+            }
         }
     }
-    wmove(game->win, game->blank.row * 2 + 1, game->blank.col * 4 + 2);
+    wmove(game->win, game->blank.row * 2 + 1, game->blank.col * 5 + 2);
 
     wrefresh(game->win);
 }
@@ -271,7 +298,6 @@ void update(Game *game) {
         case 'q': end(game, 0); break;
         default: break;
     }
-
 }
 
 
