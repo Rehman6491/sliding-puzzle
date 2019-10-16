@@ -59,6 +59,7 @@ void freeBoard(Game *game) {
 
 
 bool isSolvable(Game *game) {
+    printf("Checking puzzle...\n");
     int inversions = 0;
 
     /* Count inversions -- number of occurences of lower numbers after every index */
@@ -132,20 +133,13 @@ Game init() {
     Game game;
 
     /* Get size */
-    printf (
-        "::: SLIDING PUZZLE :::\n\
-        \n\
-        Input the size you'd like to play (3 - 9): "
-    );
+    printf ("::: SLIDING PUZZLE :::\n\nInput the size you'd like to play (3 - 9): ");
 
     scanf("%d", &(game.size));
 
     while (game.size < 3 || 9 < game.size) {
 
-        printf(
-            "Size must be an integer between and including 3 and 9\n\
-            Try again: "
-        );
+        printf("Size must be an integer between and including 3 and 9\nTry again: ");
 
         scanf("%d", &(game.size));
     }
@@ -167,6 +161,7 @@ Game init() {
     const int STARTY = 2;
     game.win = newwin(HEIGHT, WIDTH, STARTX, STARTY); /* Creates curses window */
 
+    wrefresh(game.win);
 	keypad(game.win, TRUE); /* Enables keypad input for window */
 
     return game;
@@ -214,7 +209,37 @@ void end(Game *game, int status) {
     exit(status);
 }
 
-void draw(Game *game); // TODO: Implement;
+
+void draw(Game *game) {
+
+    /* Print board */
+    for (int x = 0; x < game->size; x++) {
+        for (int y = 0; y < game->size; y++) {
+            mvwprintw(game->win, y * 2, x * 4, "+---+");
+            mvwprintw(game->win, y * 2 + 1, x * 4, "|   |");
+        }
+        mvwprintw(game->win, game->size * 2, x * 4, "+---+");
+    }
+
+    /* Print numbers */
+    for (int row = 0; row < game->size; row++) {
+        for (int col = 0; col < game->size; col++) {
+
+            char tileName;
+            if (game->board[row][col]) {
+                tileName = (char)(game->board[row][col] + 48);
+            } else {
+                tileName = ' ';
+            }
+
+            mvwaddch(game->win, row * 2 + 1, col * 4 + 2, tileName);
+        }
+    }
+    wmove(game->win, game->blank.row * 2 + 1, game->blank.col * 4 + 2);
+
+    wrefresh(game->win);
+}
+
 
 void update(Game *game) {
 
@@ -236,6 +261,7 @@ int main(/*int argc, char *argv[]*/) {
 
     Game game = init();
     while (1) {
+        draw(&game);
         update(&game);
     }
     end(&game, 0);
