@@ -14,16 +14,18 @@ typedef struct {
 
 
 typedef enum {
-    Up = 1,
-    Down = 2,
-    Left = 3,
-    Right = 4,
+    Up = 0,
+    Down = 1,
+    Left = 2,
+    Right = 3,
 } Direction;
 
 
 typedef enum {
     Solved = 1,
     Unsolved = 0,
+    Warn = -1,
+    Error = -2,
 } GameState;
 
 
@@ -172,31 +174,41 @@ void moveTile(Game *game, Direction dir) {
     /* Pattern matching */
     Position locus[] = {
         {   /* Up */
-            .row = game->blank.row + game->size,
+            .row = game->blank.row - 1,
             .col = game->blank.col
         },{ /* Down */
-            .row = game->blank.row - game->size,
+            .row = game->blank.row + 1,
             .col = game->blank.col
         },{ /* Left */
             .row = game->blank.row,
-            .col = game->blank.col + 1
+            .col = game->blank.col - 1
         },{ /* Right */
             .row = game->blank.row,
-            .col = game->blank.col - 1
+            .col = game->blank.col + 1
         }
     };
 
-    /* Assign locations to vars for ease of access */
-    int* tile = &game->board[locus[dir].row][locus[dir].col];
-    int* blank = &game->board[game->blank.row][game->blank.col];
+    if (locus[dir].row < 0
+    ||  locus[dir].col < 0
+    ||  game->size - 1 < locus[dir].row
+    ||  game->size - 1 < locus[dir].col ) {
 
-    /* Update blank location in game */
-    game->blank.row = locus[dir].row;
-    game->blank.col = locus[dir].col;
+        game->state = Warn;
 
-    /* swap values */
-    *blank = *tile;
-    *tile = 0;
+    } else {
+
+        /* Assign locations to vars for ease of access */
+        int* tile = &game->board[locus[dir].row][locus[dir].col];
+        int* blank = &game->board[game->blank.row][game->blank.col];
+
+        /* Update blank location in game */
+        game->blank.row = locus[dir].row;
+        game->blank.col = locus[dir].col;
+
+        /* swap values */
+        *blank = *tile;
+        *tile = 0;
+    }
 }
 
 
@@ -229,7 +241,12 @@ void draw(Game *game) {
             if (game->board[row][col]) {
                 tileName = (char)(game->board[row][col] + 48);
             } else {
-                tileName = ' ';
+                if (game->state == Warn) {
+                    tileName = '!';
+                    game->state = Unsolved;
+                } else {
+                    tileName = ' ';
+                }
             }
 
             mvwaddch(game->win, row * 2 + 1, col * 4 + 2, tileName);
@@ -254,6 +271,7 @@ void update(Game *game) {
         case 'q': end(game, 0); break;
         default: break;
     }
+
 }
 
 
