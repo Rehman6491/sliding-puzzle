@@ -4,9 +4,6 @@
 #include <stdlib.h>
 #include <ncurses.h>
 
-#define TEST 0
-#define DEBUG 0
-
 typedef struct {
     int row;
     int col;
@@ -245,14 +242,6 @@ void draw(Game *game) {
 
     game->state = checkGame(game);
 
-    if (game->state == Solved) {
-
-        /* Victory screen */
-        mvwprintw(game->win, game->size, game->size * 2 + game->size / 2 - 6, "YOU SOLVED IT!");
-        mvwprintw(game->win, game->size + 1, game->size * 2 + game->size / 2 - 6, "Push Q to exit");
-        
-    }
-
     /* Print board */
     for (int x = 0; x < game->size; x++) {
         for (int y = 0; y < game->size; y++) {
@@ -279,6 +268,16 @@ void draw(Game *game) {
             }
         }
     }
+
+    /* Print victory screen */
+    if (game->state == Solved) {
+
+        mvwprintw(game->win, game->size, game->size * 2 + game->size / 2 - 7, " YOU SOLVED IT! ");
+        mvwprintw(game->win, game->size + 1, game->size * 2 + game->size / 2 - 7, " Push Q to exit ");
+        
+    }
+
+    /* Move cursor to blank */
     wmove(game->win, game->blank.row * 2 + 1, game->blank.col * 5 + 2);
 
     wrefresh(game->win);
@@ -303,11 +302,16 @@ void update(Game *game) {
 
 int main(/*int argc, char *argv[]*/) {
 
+    /* Initialize game */
     Game game = init();
+
+    /* Main game loop */
     while (1) {
         draw(&game);
         update(&game);
     }
+    
+    /* Terminate game */
     end(&game, 0);
     return 0;
 }
